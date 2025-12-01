@@ -1,0 +1,4 @@
+# Ignore files from build processes and system files
+build
+*.spec
+.DS_Store
