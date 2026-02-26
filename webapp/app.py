@@ -137,14 +137,16 @@ def api_process():
             logs.append("⚠  pikepdf nicht verfügbar – PDF-Metadaten nicht gesetzt")
 
         # --- ZIP im RAM bauen ---
+        EXCLUDE = {"metadata.json"}
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
             for root, _, filenames in os.walk(piece_dir):
                 for fname in filenames:
+                    if fname in EXCLUDE:
+                        continue
                     abs_path = os.path.join(root, fname)
                     arc_name = os.path.relpath(abs_path, tmpdir)
                     zf.write(abs_path, arc_name)
-            zf.writestr(f"{pretty_name}/_log.txt", "\n".join(logs))
 
         zip_buffer.seek(0)
         return send_file(
