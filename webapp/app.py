@@ -74,10 +74,10 @@ def index():
 
 @app.route("/api/process", methods=["POST"])
 def api_process():
-    pretty_name = request.form.get("pretty_name", "").strip()
-    author      = request.form.get("author", "").strip()
-    subject     = request.form.get("subject", "").strip()
-    codes       = request.form.getlist("codes[]")
+    pretty_name     = request.form.get("pretty_name", "").strip()
+    author          = request.form.get("author", "").strip()
+    extra_keywords  = [k.strip() for k in request.form.getlist("extra_keywords[]") if k.strip()]
+    codes           = request.form.getlist("codes[]")
     files       = request.files.getlist("pdfs[]")
 
     # --- Validierung ---
@@ -109,11 +109,12 @@ def api_process():
             logs.append(f"✓  Gespeichert: {new_filename}")
 
         # --- metadata.json ---
+        base_keywords = extra_keywords if extra_keywords else ["Skyline-BigBand"]
         metadata = {
             "Title": pretty_name,
             "Author": author,
-            "Subject": subject,
-            "Keywords": ["Skyline-BigBand"],
+            "Subject": "",
+            "Keywords": base_keywords,
         }
         with open(os.path.join(piece_dir, "metadata.json"), "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=4, ensure_ascii=False)
@@ -125,9 +126,10 @@ def api_process():
                 try:
                     pdf = pikepdf.Pdf.open(pdf_path, allow_overwriting_input=True)
                     pdf.docinfo["/Title"]    = pikepdf.String(f"{pretty_name} - {stimme}")
+                    kw_list = base_keywords + [stimme]
                     pdf.docinfo["/Author"]   = pikepdf.String(author)
-                    pdf.docinfo["/Subject"]  = pikepdf.String(subject)
-                    pdf.docinfo["/Keywords"] = pikepdf.String(f"Skyline-BigBand, {stimme}")
+                    pdf.docinfo["/Subject"]  = pikepdf.String("")
+                    pdf.docinfo["/Keywords"] = pikepdf.String(", ".join(kw_list))
                     pdf.save(pdf_path)
                     pdf.close()
                     logs.append(f"✓  PDF-Metadaten: {os.path.basename(pdf_path)}")
