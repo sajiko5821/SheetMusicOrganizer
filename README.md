@@ -8,94 +8,111 @@
 [![Build Status](https://img.shields.io/github/actions/workflow/status/sajiko5821/sheetmusicorganizer/docker.yml?branch=main&label=build&logo=github)](https://github.com/sajiko5821/sheetmusicorganizer/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Automates the organization, standardization, and metadata injection of PDF sheet music collections. The application processes Big Band arrangements and embeds consistent naming conventions and metadata directly into PDF documents.
+Automates the organization, renaming, and metadata injection of PDF sheet music.
 
-The primary goal is to ensure consistency in file naming and to embed essential metadata (Title, Author, Subject, Keywords) directly into the PDF documents using a structured workflow.
+The project has a **web frontend first** workflow and keeps the original
+CLI pipeline as a legacy/power-user path.
 
-## 🚀 Features
-
-The repository provides three distinct scripts to handle the end-to-end processing of your sheet music collection:
-
-1. ```create_metadata```:
-
-- Recursively searches a root directory for folders containing .pdf files.
-- Creates a metadata.json file in each of those folders.
-- Sets the initial Title field in the JSON to the name of the folder.
-
-2. ```rename_files```:
-
-- Renames PDF files to a standardized format: `{cleaned_directory_name}_{short_instrument_code}.pdf`.
-- Uses a configurable `DEFAULT_TARGET_MAP` to convert long instrument names (e.g., "trombone-1") found in the original filename to short codes (e.g., "trb_1").
-
-3. ```write_metadata```:
-
-- Reads the generated `metadata.json` file.
-- Uses the short instrument code from the standardized filename (e.g., "trb_1") to augment the PDF's Title (e.g., "Take the A Train - TRB_1").
-- Injects the Title, Author, Subject, and Keywords into the PDF's internal metadata fields using the pikepdf library.
-
-## 📋 Prerequisites
-
-To run these scripts, you need to download the latest Executables. There is no need to install additional libraries.
-
-## 🛠️ Usage Workflow
-
-The intended workflow involves running the three scripts sequentially. Always use the --dry-run (-n) flag first to preview changes before applying them.
-
-### Step 1: Generate Metadata Files
-
-This script creates the `metadata.json` file in every directory that contains PDF files, setting the initial Title based on the folder name.
+## Project Structure
 
 ```
-./create_metadata <root_directory_path>
-
-# Example (Dry Run)
-./create_metadata /path/to/my/Scores --dry-run
-
-# Overwrite existing metadata.json files
-./create_metadata /path/to/my/Scores --force
+.
+|-- webapp/
+|   |-- app.py
+|   |-- templates/
+|   `-- static/
+|-- dist/
+|   |-- create_metadata.py
+|   |-- rename_files.py
+|   |-- write_metadata.py
+|   |-- create_metadata        # onefile executable
+|   |-- rename_files           # onefile executable
+|   `-- write_metadata         # onefile executable
+`-- build/                     # pyinstaller build artifacts
 ```
 
-### Step 2: Standardize File Names
+## Web Frontend (Recommended)
 
-This script renames the PDF files within each directory. This step is crucial as the renaming ensures a consistent format (`<piece_name>_<instrument_code>.pdf`), which is later used by the metadata injector.
+The web frontend is the primary user experience.
 
-Example Before Renaming: `/path/to/Scores/My Big Band Tune/My Big Band Tune - Trombone-1.pdf`
+- Upload PDFs in the browser
+- Assign/auto-detect instrument parts
+- Generate renamed files + `metadata.json`
+- Write PDF metadata via `pikepdf`
+- Download the processed ZIP
 
-Example After Renaming: `/path/to/Scores/My Big Band Tune/my_big_band_tune_trb_1.pdf`
+### Run Locally
 
-```
-./rename_files <root_directory_path>
-
-# Example (Execute Rename)
-./rename_files /path/to/my/Scores --dry-run
-```
-
-### Step 3: Inject Metadata into PDFs
-
-This script opens each PDF, reads its corresponding ```metadata.json```, and embeds the document information (Title, Author, Subject, Keywords) into the PDF's internal structure.
-
-```
-./write_metadata <root_directory_path>
-
-# Example (Execute Metadata Injection)
-write_metadata /path/to/my/Scores --dry-run
+```bash
+cd webapp
+python app.py
 ```
 
-## 💻 Development
+Default development URL: `http://127.0.0.1:5001`
 
-If there are new changes you need to create a new release. For this use:
+### Run with Docker
 
+```bash
+docker build -t sheetmusicorganizer webapp/
+docker run -p 5000:5000 sheetmusicorganizer
 ```
+
+## CLI Pipeline (Still Supported)
+
+The original 3-step pipeline is still available and useful for batch workflows.
+
+Use either:
+
+- Python scripts in `dist/*.py` (source path)
+- Onefile executables in `dist/` (sometimes called "onejar/onefile" builds)
+
+Always run dry-run first.
+
+### 1. Create `metadata.json`
+
+```bash
+python dist/create_metadata.py <root_directory_path> --dry-run
+```
+
+Overwrite existing metadata files when needed:
+
+```bash
+python dist/create_metadata.py <root_directory_path> --force
+```
+
+### 2. Rename PDFs
+
+```bash
+python dist/rename_files.py <root_directory_path> --dry-run
+```
+
+### 3. Write PDF metadata
+
+```bash
+python dist/write_metadata.py <root_directory_path> --dry-run
+```
+
+### Use Onefile Executables Instead of Python
+
+```bash
+./dist/create_metadata <root_directory_path> --dry-run
+./dist/rename_files <root_directory_path> --dry-run
+./dist/write_metadata <root_directory_path> --dry-run
+```
+
+## Build / Release CLI Onefile Executables
+
+If you change the legacy scripts, rebuild the onefile executables from the
+`dist/*.py` sources.
+
+```bash
 pip install pyinstaller
+pyinstaller --onefile dist/create_metadata.py
+pyinstaller --onefile dist/rename_files.py
+pyinstaller --onefile dist/write_metadata.py
 ```
 
-Afterward create the Executable for each of the main scripts. The `--onefile` flag is highly recommended to bundle everything into a single, clean executable.
-
-```
-pyinstaller --onefile create_metadata.py
-pyinstaller --onefile rename_files.py
-pyinstaller --onefile write_metadata.py
-```
+PyInstaller outputs metadata and temporary build data in `build/`.
 
 ## Attributions
 
