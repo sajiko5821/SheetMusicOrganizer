@@ -95,9 +95,28 @@ def api_process():
     if len(files) != len(codes):
         return jsonify({"error": "Anzahl Dateien und Codes stimmt nicht überein."}), 400
     for i, uploaded_file in enumerate(files):
-        extension = os.path.splitext(uploaded_file.filename)[1].lower()
+        filename = uploaded_file.filename or ""
+        extension = os.path.splitext(filename)[1].lower()
         if extension not in ALLOWED_UPLOAD_EXTENSIONS:
             return jsonify({"error": f"Ungültige Datei {i+1}: nur PDF erlaubt."}), 400
+
+        # Zusätzlich: Content-Type und Magic-Header prüfen, damit keine Nicht-PDFs durchrutschen
+        mimetype = (uploaded_file.mimetype or "").lower()
+        if mimetype not in ("application/pdf", "application/x-pdf"):
+            return jsonify({"error": f"Ungültige Datei {i+1}: nur PDF-Uploads erlaubt (Content-Type)."}), 400
+
+        # Ersten Bytes des Streams prüfen: ein gültiges PDF beginnt mit '%PDF-'
+        try:
+            # Position merken, wenige Bytes lesen, danach zurückspulen
+            pos = uploaded_file.stream.tell()
+            header = uploaded_file.stream.read(5)
+            uploaded_file.stream.seek(pos)
+        except Exception:
+            return jsonify({"error": f"Ungültige Datei {i+1}: Datei konnte nicht gelesen werden."}), 400
+
+        if header != b"%PDF-":
+            return jsonify({"error": f"Ungültige Datei {i+1}: Datei ist kein gültiges PDF."}), 400
+
     for i, code in enumerate(codes):
         normalized_code = code.strip()
         if not normalized_code:
