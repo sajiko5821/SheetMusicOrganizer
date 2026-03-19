@@ -15,6 +15,13 @@ except ImportError:
     PIKEPDF_AVAILABLE = False
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100 MB upload limit per request
+ALLOWED_UPLOAD_EXTENSIONS = {".pdf"}
+
+
+@app.errorhandler(413)
+def request_entity_too_large(_error):
+    return jsonify({"error": "Upload zu groß (max. 100 MB pro Anfrage)."}), 413
 
 # --------------------------------------------------------------------------
 # Bekannte Instrument-Codes (für Frontend-Dropdown + Auto-Erkennung)
@@ -87,9 +94,35 @@ def api_process():
         return jsonify({"error": "Keine PDF-Dateien hochgeladen."}), 400
     if len(files) != len(codes):
         return jsonify({"error": "Anzahl Dateien und Codes stimmt nicht überein."}), 400
+    for i, uploaded_file in enumerate(files):
+        filename = uploaded_file.filename or ""
+        extension = os.path.splitext(filename)[1].lower()
+        if extension not in ALLOWED_UPLOAD_EXTENSIONS:
+            return jsonify({"error": f"Ungültige Datei {i+1}: nur PDF erlaubt."}), 400
+
+        # Zusätzlich: Content-Type und Magic-Header prüfen, damit keine Nicht-PDFs durchrutschen
+        mimetype = (uploaded_file.mimetype or "").lower()
+        if mimetype not in ("application/pdf", "application/x-pdf"):
+            return jsonify({"error": f"Ungültige Datei {i+1}: nur PDF-Uploads erlaubt (Content-Type)."}), 400
+
+        # Ersten Bytes des Streams prüfen: ein gültiges PDF beginnt mit '%PDF-'
+        try:
+            # Position merken, wenige Bytes lesen, danach zurückspulen
+            pos = uploaded_file.stream.tell()
+            header = uploaded_file.stream.read(5)
+            uploaded_file.stream.seek(pos)
+        except Exception:
+            return jsonify({"error": f"Ungültige Datei {i+1}: Datei konnte nicht gelesen werden."}), 400
+
+        if header != b"%PDF-":
+            return jsonify({"error": f"Ungültige Datei {i+1}: Datei ist kein gültiges PDF."}), 400
+
     for i, code in enumerate(codes):
-        if not code.strip():
+        normalized_code = code.strip()
+        if not normalized_code:
             return jsonify({"error": f"Kein Instrument-Code für Datei {i+1} angegeben."}), 400
+        if normalized_code not in INSTRUMENT_CODES:
+            return jsonify({"error": f"Ungültiger Instrument-Code für Datei {i+1}: {normalized_code}"}), 400
 
     cleaned_name = clean_name(pretty_name)
     logs = []
@@ -124,16 +157,15 @@ def api_process():
         if PIKEPDF_AVAILABLE:
             for pdf_path, stimme in saved_files:
                 try:
-                    pdf = pikepdf.Pdf.open(pdf_path, allow_overwriting_input=True)
-                    pdf.docinfo["/Title"]    = pikepdf.String(f"{pretty_name} - {stimme}")
-                    kw_list = base_keywords + [stimme]
-                    pdf.docinfo["/Author"]   = pikepdf.String(author)
-                    pdf.docinfo["/Subject"]  = pikepdf.String("")
-                    pdf.docinfo["/Keywords"] = pikepdf.String(", ".join(kw_list))
-                    pdf.save(pdf_path)
-                    pdf.close()
+                    with pikepdf.Pdf.open(pdf_path, allow_overwriting_input=True) as pdf:
+                        pdf.docinfo["/Title"]    = pikepdf.String(f"{pretty_name} - {stimme}")
+                        kw_list = base_keywords + [stimme]
+                        pdf.docinfo["/Author"]   = pikepdf.String(author)
+                        pdf.docinfo["/Subject"]  = pikepdf.String("")
+                        pdf.docinfo["/Keywords"] = pikepdf.String(", ".join(kw_list))
+                        pdf.save(pdf_path)
                     logs.append(f"✓  PDF-Metadaten: {os.path.basename(pdf_path)}")
-                except Exception as e:
+                except (OSError, pikepdf.PdfError, KeyError) as e:
                     logs.append(f"⚠  Metadaten-Fehler ({os.path.basename(pdf_path)}): {e}")
         else:
             logs.append("⚠  pikepdf nicht verfügbar – PDF-Metadaten nicht gesetzt")

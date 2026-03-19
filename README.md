@@ -50,6 +50,9 @@ This script creates the `metadata.json` file in every directory that contains PD
 
 # Example (Dry Run)
 ./create_metadata /path/to/my/Scores --dry-run
+
+# Overwrite existing metadata.json files
+./create_metadata /path/to/my/Scores --force
 ```
 
 ### Step 2: Standardize File Names
