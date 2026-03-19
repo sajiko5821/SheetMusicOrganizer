@@ -157,14 +157,13 @@ def api_process():
         if PIKEPDF_AVAILABLE:
             for pdf_path, stimme in saved_files:
                 try:
-                    pdf = pikepdf.Pdf.open(pdf_path, allow_overwriting_input=True)
-                    pdf.docinfo["/Title"]    = pikepdf.String(f"{pretty_name} - {stimme}")
-                    kw_list = base_keywords + [stimme]
-                    pdf.docinfo["/Author"]   = pikepdf.String(author)
-                    pdf.docinfo["/Subject"]  = pikepdf.String("")
-                    pdf.docinfo["/Keywords"] = pikepdf.String(", ".join(kw_list))
-                    pdf.save(pdf_path)
-                    pdf.close()
+                    with pikepdf.Pdf.open(pdf_path, allow_overwriting_input=True) as pdf:
+                        pdf.docinfo["/Title"]    = pikepdf.String(f"{pretty_name} - {stimme}")
+                        kw_list = base_keywords + [stimme]
+                        pdf.docinfo["/Author"]   = pikepdf.String(author)
+                        pdf.docinfo["/Subject"]  = pikepdf.String("")
+                        pdf.docinfo["/Keywords"] = pikepdf.String(", ".join(kw_list))
+                        pdf.save(pdf_path)
                     logs.append(f"✓  PDF-Metadaten: {os.path.basename(pdf_path)}")
                 except (OSError, pikepdf.PdfError, KeyError) as e:
                     logs.append(f"⚠  Metadaten-Fehler ({os.path.basename(pdf_path)}): {e}")
