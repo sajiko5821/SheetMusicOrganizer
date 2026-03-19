@@ -1,6 +1,5 @@
 import os
 import json
-import re
 import argparse
 import pikepdf  # Import the pikepdf library
 
@@ -39,17 +38,29 @@ def add_metadata_to_pdf(root_directory, dry_run=False):
                     try:
                         with open(metadata_filepath, "r", encoding="utf-8") as f:
                             metadata_json = json.load(f)
+
+                        base_title = metadata_json.get("Title", "").strip()
+                        if not base_title:
+                            print(f"Error: Missing or empty 'Title' in {metadata_filepath}")
+                            continue
+
+                        raw_keywords = metadata_json.get("Keywords", [])
+                        if isinstance(raw_keywords, list):
+                            keywords = [str(item).strip() for item in raw_keywords if str(item).strip()]
+                        elif isinstance(raw_keywords, str):
+                            keywords = [item.strip() for item in raw_keywords.split(",") if item.strip()]
+                        else:
+                            keywords = []
+
                         # Construct the title.
                         stimme = get_stimme_from_filename(filename)
                         if stimme:
-                            pdf_title = f"{metadata_json['Title']} - {stimme}"
+                            pdf_title = f"{base_title} - {stimme}"
                             # Add stimme to keywords
-                            keywords = metadata_json.get("Keywords", [])  # get existing keywords or empty list
                             if stimme not in keywords:
                                 keywords.append(stimme)
                         else:
-                            pdf_title = metadata_json['Title']
-                            keywords = metadata_json.get("Keywords", [])
+                            pdf_title = base_title
                         if dry_run:
                             print(f"[DRY RUN] Adding metadata to: {pdf_filepath} with title: {pdf_title}")
                             print(f"[DRY RUN]   Author: {metadata_json.get('Author', '')}")
@@ -69,8 +80,8 @@ def add_metadata_to_pdf(root_directory, dry_run=False):
 
                     except (OSError, pikepdf.PdfError) as e:
                         print(f"Error processing {pdf_filepath}: {e}")
-                    except KeyError as e:
-                        print(f"Error: Missing key in {metadata_filepath}: {e}")
+                    except json.JSONDecodeError as e:
+                        print(f"Error: Invalid JSON in {metadata_filepath}: {e}")
                 else:
                     print(f"Warning: No metadata.json found for {pdf_filepath}")
 

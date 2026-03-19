@@ -173,37 +173,6 @@
             line-height: 1;
         }
 
-        /* ---- Folder status badge ---- */
-        .folder-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .folder-row input {
-            flex: 1;
-        }
-
-        #folder-status {
-            font-size: .78rem;
-            padding: 4px 10px;
-            border-radius: 20px;
-            white-space: nowrap;
-            display: none;
-        }
-
-        #folder-status.ok {
-            background: #1a3a2a;
-            color: var(--ok);
-            display: inline-block;
-        }
-
-        #folder-status.error {
-            background: #3a1a1a;
-            color: var(--error);
-            display: inline-block;
-        }
-
         /* ---- Tag input ---- */
         .tag-input {
             display: flex;
@@ -457,18 +426,6 @@
             display: none;
         }
 
-        #log-box {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 14px 16px;
-            font-family: 'SFMono-Regular', 'Consolas', monospace;
-            font-size: .8rem;
-            line-height: 1.7;
-            max-height: 280px;
-            overflow-y: auto;
-        }
-
         .log-ok {
             color: var(--ok);
         }
@@ -577,7 +534,6 @@
                     <div class="tag-input" id="tag-input" tabindex="0">
                         <input type="text" id="tag-text" placeholder="Tag hinzufügen…" autocomplete="off" />
                     </div>
-                    <div id="tag-hidden"></div>
                 </div>
             </div>
         </div>
@@ -901,7 +857,6 @@
             // ------------------------------------------------------------------
             const tagInput = document.getElementById("tag-input");
             const tagText = document.getElementById("tag-text");
-            const tagHidden = document.getElementById("tag-hidden");
             let customTags = ["Skyline-BigBand"];
 
             function getExtraKeywords() {

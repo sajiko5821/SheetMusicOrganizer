@@ -1,6 +1,5 @@
 import os
 import json
-import re
 import argparse
 
 def get_directory_name(directory_path):
@@ -15,13 +14,15 @@ def get_directory_name(directory_path):
     """
     return os.path.basename(directory_path)
 
-def create_metadata_file(root_directory, dry_run=False):
+def create_metadata_file(root_directory, dry_run=False, force=False):
     """
     Creates a metadata.json file in each directory containing PDF files.
 
     Args:
         root_directory (str): The path to the root directory.
         dry_run (bool, optional): If True, prints the actions without creating files.
+            Defaults to False.
+        force (bool, optional): If True, overwrite existing metadata.json files.
             Defaults to False.
     """
     for dirpath, dirnames, filenames in os.walk(root_directory):
@@ -38,6 +39,10 @@ def create_metadata_file(root_directory, dry_run=False):
 
             # Construct the full path to the metadata.json file
             metadata_filepath = os.path.join(dirpath, "metadata.json")
+
+            if os.path.exists(metadata_filepath) and not force:
+                print(f"Skipping existing metadata file: {metadata_filepath}")
+                continue
 
             if dry_run:
                 print(f"[DRY RUN] Creating: {metadata_filepath} with content:")
@@ -63,6 +68,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Perform a dry run: print the creation actions without actually creating files.",
     )
+    parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="Overwrite existing metadata.json files.",
+    )
     args = parser.parse_args()
 
     # Get the root directory from the arguments
@@ -70,6 +81,7 @@ if __name__ == "__main__":
 
     # Get the dry-run flag
     dry_run = args.dry_run
+    force = args.force
 
     # Check if the root directory exists
     if not os.path.exists(root_directory):
@@ -77,4 +89,4 @@ if __name__ == "__main__":
         exit(1)  # Exit with an error code
 
     # Call the function to create the metadata files
-    create_metadata_file(root_directory, dry_run)
+    create_metadata_file(root_directory, dry_run, force)
