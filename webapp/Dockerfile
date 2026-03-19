@@ -18,6 +18,7 @@ COPY --from=builder /install /usr/local
 # App-Code kopieren
 COPY app.py .
 COPY templates/ templates/
+COPY static/ static/
 
 USER appuser
 

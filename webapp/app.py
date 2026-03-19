@@ -164,7 +164,7 @@ def api_process():
 # --------------------------------------------------------------------------
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="SheetMusicOrganizer Web-GUI")
-    parser.add_argument("--port", type=int, default=5000, help="Port (Standard: 5000)")
+    parser.add_argument("--port", type=int, default=5001, help="Port (Standard: 5001)")
     parser.add_argument("--host", default="127.0.0.1", help="Host (Standard: 127.0.0.1)")
     args = parser.parse_args()
     print(f"SheetMusicOrganizer läuft auf http://{args.host}:{args.port}")

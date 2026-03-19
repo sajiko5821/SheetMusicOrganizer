@@ -1,6 +1,14 @@
-# SheetMusicOrganizer
+<p align="center">
+  <img src="webapp/static/logo.png" width="200" />
+</p>
 
-This repository contains a set of Python scripts designed to automate the organization, standardization, and metadata injection for a collection of PDF sheet music files, particularly optimized for Big Band arrangements with instrument parts (Stimmen) housed in individual folders.
+<h1 align="center">SheetMusicOrganizer</h1>
+
+[![Docker Image Version](https://img.shields.io/github/v/tag/sajiko5821/sheetmusicorganizer?label=version&logo=docker&color=2496ED)](https://github.com/sajiko5821/sheetmusicorganizer/pkgs/container/sheetmusicorganizer)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/sajiko5821/sheetmusicorganizer/docker.yml?branch=main&label=build&logo=github)](https://github.com/sajiko5821/sheetmusicorganizer/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Automates the organization, standardization, and metadata injection of PDF sheet music collections. The application processes Big Band arrangements and embeds consistent naming conventions and metadata directly into PDF documents.
 
 The primary goal is to ensure consistency in file naming and to embed essential metadata (Title, Author, Subject, Keywords) directly into the PDF documents using a structured workflow.
 
@@ -73,6 +81,7 @@ write_metadata /path/to/my/Scores --dry-run
 ## 💻 Development
 
 If there are new changes you need to create a new release. For this use:
+
 ```
 pip install pyinstaller
 ```
@@ -84,3 +93,7 @@ pyinstaller --onefile create_metadata.py
 pyinstaller --onefile rename_files.py
 pyinstaller --onefile write_metadata.py
 ```
+
+## Attributions
+
+<a href="https://www.flaticon.com/de/kostenlose-icons/musik-und-multimedia" title="musik und multimedia Icons">Musik und multimedia Icons erstellt von HideMaru - Flaticon</a>
