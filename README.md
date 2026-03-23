@@ -15,7 +15,7 @@ CLI pipeline as a legacy/power-user path.
 
 ## Impressions
 
-<video src="webapp/static/webapp.mov" autoplay loop muted playsinline width="100%"></video>
+![Web frontend with file upload and metadata assignment](webapp/static/webapp.gif)
 
 ![Metadata of a renamed PDF](webapp/static/metadata.png)
 
