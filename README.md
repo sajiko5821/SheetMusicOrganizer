@@ -13,6 +13,12 @@ Automates the organization, renaming, and metadata injection of PDF sheet music.
 The project has a **web frontend first** workflow and keeps the original
 CLI pipeline as a legacy/power-user path.
 
+## Impressions
+
+<video src="webapp/static/webapp.mov" autoplay loop muted playsinline width="100%"></video>
+
+![Metadata of a renamed PDF](webapp/static/metadata.png)
+
 ## Project Structure
 
 ```
