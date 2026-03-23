@@ -59,8 +59,23 @@ Default development URL: `http://127.0.0.1:5001`
 ### Run with Docker
 
 ```bash
-docker build -t sheetmusicorganizer webapp/
-docker run -p 5000:5000 sheetmusicorganizer
+docker run -d \
+  --name sheetmusicorganizer \
+  -p 5000:5000 \
+  --restart unless-stopped \
+  ghcr.io/sajiko5821/sheetmusicorganizer:latest
+```
+
+### Docker Compose
+
+```yaml
+services:
+  sheetmusicorganizer:
+    image: ghcr.io/sajiko5821/sheetmusicorganizer:latest
+    container_name: sheetmusicorganizer
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
 ```
 
 ## CLI Pipeline (Still Supported)
